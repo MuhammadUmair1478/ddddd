@@ -370,6 +370,11 @@ const DDDFile = ({
           <Grid item xs={12} md={6}>
             <Autocomplete
               fullWidth
+              freeSolo={false}
+              clearOnEscape
+              selectOnFocus
+              handleHomeEndKeys
+              openOnFocus
               value={
                 driverId
                   ? driverLookupData?.response?.find(
@@ -388,16 +393,22 @@ const DDDFile = ({
               loading={isDriversLoading}
               disabled={isDriversLoading}
               filterOptions={(options, { inputValue }) => {
-                return options.filter((option) =>
-                  `${option.name} ${option.surname || ""}`
-                    .toLowerCase()
-                    .includes(inputValue.toLowerCase())
-                );
+                if (!inputValue) return options;
+                return options.filter((option) => {
+                  const fullName = `${option.name} ${option.surname || ""}`;
+                  const searchText = inputValue.toLowerCase().trim();
+                  return (
+                    fullName.toLowerCase().includes(searchText) ||
+                    option.name.toLowerCase().includes(searchText) ||
+                    (option.surname && option.surname.toLowerCase().includes(searchText))
+                  );
+                });
               }}
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  placeholder="Select Driver"
+                  placeholder="Type to search drivers..."
+                  variant="outlined"
                   InputProps={{
                     ...params.InputProps,
                     endAdornment: (
@@ -411,11 +422,30 @@ const DDDFile = ({
                   }}
                 />
               )}
-              renderOption={(props, option) => (
-                <li {...props} key={option.id}>
-                  {option.name} {option.surname || ""}
-                </li>
-              )}
+              renderOption={(props, option, { inputValue }) => {
+                const fullName = `${option.name} ${option.surname || ""}`;
+                const highlightText = (text, highlight) => {
+                  if (!highlight.trim()) return text;
+                  const regex = new RegExp(`(${highlight})`, 'gi');
+                  const parts = text.split(regex);
+                  return parts.map((part, index) =>
+                    regex.test(part) ? (
+                      <strong key={index} style={{ backgroundColor: '#ffeb3b' }}>
+                        {part}
+                      </strong>
+                    ) : (
+                      part
+                    )
+                  );
+                };
+
+                return (
+                  <li {...props} key={option.id}>
+                    {highlightText(fullName, inputValue)}
+                  </li>
+                );
+              }}
+              noOptionsText="No drivers found"
             />
           </Grid>
         )}
