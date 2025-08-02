@@ -12,6 +12,8 @@ import {
   DialogContent,
   Box,
   CircularProgress,
+  Autocomplete,
+  TextField,
 } from "@mui/material";
 import { ArrowBack, Refresh } from "@mui/icons-material";
 import dayjs from "dayjs";
@@ -366,31 +368,55 @@ const DDDFile = ({
       <Grid container spacing={2} mb={3}>
         {!propDriverId && (
           <Grid item xs={12} md={6}>
-            <Select
+            <Autocomplete
               fullWidth
-              displayEmpty
-              value={driverId}
-              onChange={(e) => setDriverId(String(e.target.value))}
-              disabled={isDriversLoading}
-              renderValue={(selected) => {
-                if (!selected) return "Select Driver";
-                const d = driverLookupData?.response?.find(
-                  (dr) => String(dr.id) === selected
-                );
-                return d ? `${d.name}` : "Select Driver";
+              value={
+                driverId
+                  ? driverLookupData?.response?.find(
+                      (driver) => String(driver.id) === driverId
+                    ) || null
+                  : null
+              }
+              onChange={(event, newValue) => {
+                setDriverId(newValue ? String(newValue.id) : "");
               }}
-            >
-              {isDriversLoading && (
-                <MenuItem value="" disabled>
-                  <CircularProgress size={20} />
-                </MenuItem>
+              options={driverLookupData?.response || []}
+              getOptionLabel={(option) => `${option.name} ${option.surname || ""}`}
+              isOptionEqualToValue={(option, value) =>
+                String(option.id) === String(value.id)
+              }
+              loading={isDriversLoading}
+              disabled={isDriversLoading}
+              filterOptions={(options, { inputValue }) => {
+                return options.filter((option) =>
+                  `${option.name} ${option.surname || ""}`
+                    .toLowerCase()
+                    .includes(inputValue.toLowerCase())
+                );
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  placeholder="Select Driver"
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {isDriversLoading ? (
+                          <CircularProgress color="inherit" size={20} />
+                        ) : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
+                />
               )}
-              {driverLookupData?.response?.map((driver) => (
-                <MenuItem key={driver.id} value={String(driver.id)}>
-                  {driver.name}
-                </MenuItem>
-              ))}
-            </Select>
+              renderOption={(props, option) => (
+                <li {...props} key={option.id}>
+                  {option.name} {option.surname || ""}
+                </li>
+              )}
+            />
           </Grid>
         )}
 
