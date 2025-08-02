@@ -87,11 +87,7 @@ const transformActivityData = (activityData) => {
 
         const startMinutes =
           parseInt(startTime[0]) * 60 + parseInt(startTime[1]);
-        let endMinutes = parseInt(endTime[0]) * 60 + parseInt(endTime[1]);
-
-        // Add gap before end of each state bar (2 minutes gap)
-        const gapMinutes = 2;
-        endMinutes = Math.max(startMinutes + 1, endMinutes - gapMinutes);
+        const endMinutes = parseInt(endTime[0]) * 60 + parseInt(endTime[1]);
 
         let stateKey;
         switch (true) {
@@ -247,14 +243,20 @@ const DDDFile = ({
   const chartSeries = [
     {
       data: activitiesData.flatMap((day) =>
-        day.states.map((activity) => ({
-          x: day.dateObj.format("ddd, MMM D"),
-          y: [activity.start / 60, activity.end / 60],
-          fillColor: DRIVER_STATES[activity.state]?.color,
-          state: DRIVER_STATES[activity.state]?.name,
-          startTime: activity.start,
-          endTime: activity.end,
-        }))
+        day.states.map((activity) => {
+          // Add gap before end of each state bar for visual purposes only (2 minutes gap)
+          const gapMinutes = 2;
+          const visualEndTime = Math.max(activity.start + 1, activity.end - gapMinutes);
+          
+          return {
+            x: day.dateObj.format("ddd, MMM D"),
+            y: [activity.start / 60, visualEndTime / 60],
+            fillColor: DRIVER_STATES[activity.state]?.color,
+            state: DRIVER_STATES[activity.state]?.name,
+            startTime: activity.start,
+            endTime: activity.end, // Keep original end time for tooltip
+          };
+        })
       ),
     },
   ];
