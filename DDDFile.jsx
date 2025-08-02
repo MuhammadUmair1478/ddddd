@@ -296,12 +296,15 @@ const DDDFile = ({
     tooltip: {
       custom: ({ dataPointIndex, w }) => {
         const d = w.globals.initialSeries[0].data[dataPointIndex];
-        const start = `${Math.floor(d.y[0])}:${String(
-          Math.round((d.y[0] % 1) * 60)
-        ).padStart(2, "0")}`;
-        const end = `${Math.floor(d.y[1])}:${String(
-          Math.round((d.y[1] % 1) * 60)
-        ).padStart(2, "0")}`;
+        // Use original startTime and endTime for tooltip (not the visually shortened ones)
+        const startHours = Math.floor(d.startTime / 60);
+        const startMinutes = d.startTime % 60;
+        const endHours = Math.floor(d.endTime / 60);
+        const endMinutes = d.endTime % 60;
+        
+        const start = `${startHours}:${String(startMinutes).padStart(2, "0")}`;
+        const end = `${endHours}:${String(endMinutes).padStart(2, "0")}`;
+        
         return `
         <div class="custom-tooltip" style="padding:5px;">
         <strong>${d.state}</strong><br/>
